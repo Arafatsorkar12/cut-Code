@@ -17,7 +17,7 @@ Web Debug On OFF system
             @endif
 
 
-=> Rout 
+=> Route 
  Route::get('/update-debug', function () {
 
         if (config('app.debug') === false) {
