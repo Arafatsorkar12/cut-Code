@@ -1,0 +1,10 @@
+->when($saleDate, function ($q) use ($saleDate) {
+                $q->whereDate('sale_date', '=', $saleDate);
+            })
+
+<div class="col-12 col-sm-4 col-md-3">
+                                            <label for="">Sale Date</label>
+                                            <input type="date" name="sale_date" class="form-control" value="{{ request('sale_date') }}">
+                                        </div>
+
+live search 
