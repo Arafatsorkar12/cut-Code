@@ -1,0 +1,153 @@
+
+
+Clicke this button ->
+ <a href="javascript:void(0);" role="button" class="btn btn-sm bs-tooltip" style="background-color: rgb(208, 23, 4) !important; border: 1px solid rgb(92,0,255) !important;" title="Reject" onclick="showRejectModal('{{ $shop->id }}')">
+                                        <i class="fa fa-remove"></i>
+                                    </a>
+
+modal------- - > 
+<div id="rejectModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject License</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reject this license?</p>
+                <textarea name="rejectSMS" id="rejectSMS" cols="70" rows="5"></textarea>
+                <input type="hidden" id="licenseId" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="rejectLicense()">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+script------>
+
+ function showRejectModal(licenseId) {
+            document.getElementById('licenseId').value = licenseId;
+            $('#rejectModal').modal('show');
+        }
+        function rejectLicense() {
+            var licenseId = document.getElementById('licenseId').value;
+            var rejectMessage = document.getElementById('rejectSMS').value;
+            fetch(`/nagarik/shop-booking-reject/${licenseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    id: licenseId,
+                    message: rejectMessage
+                })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        $('#rejectModal').modal('hide');
+                        $(document).ready(function() {
+                            location.reload();
+                        });
+                    } else {
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+route---->
+
+    Route::post('shop-booking-reject/{id}', [AdminNewShopBookingApplyController::class, 'ShopBookingReject']);
+
+
+controller ----- > 
+
+  public function ShopBookingReject(Request  $request , $id)
+    {
+
+        $userStatus = NagorikMarketBooking::where('id', $id)->update(['status' => 3]);
+        if ($userStatus) {
+            $sms = SMSInfo::first();
+            if ($sms->reject_status == 1) {
+                $licenseData = NagorikMarketBooking::find($id);
+                $number = $licenseData->user->phone;
+                $message = $request->message;
+                $this->paymentService->RejectSMS($number, $message);
+                return response()->json(['message' => 'Shop booking status updated successfully and SMS sent.']);
+            }
+        } else {
+            return response()->json(['error' => 'Failed to update Shop booking Status.']);
+        }
+
+    }
+
+if service sms system --------> 
+    public  function RejectSMS( $number,$massage )
+    {
+
+        $smsApi = SMSInfo::first();
+
+
+        $numbers = $number;
+        $mobiles = explode(",", $numbers);
+        $mobile_numbers = [];
+
+        foreach ($mobiles as $str) {
+            $str = preg_replace('/\s+/', '', $str);
+
+            if (strlen($str) == 10) {
+                $mobile_numbers[] = "880" . $str;
+            } else if (strlen($str) == 11) {
+                $mobile_numbers[] = "88" . $str;
+            } else {
+                $mobile_numbers[] = $str;
+            }
+        }
+
+        $recipient = implode(',', $mobile_numbers);
+
+
+        $url = "https://sms.smartsoftwarebd.com/api/v3/sms/send";
+
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        $headers = array(
+            "Authorization: Bearer " . $smsApi->Bearer_token,
+            "Content-Type: application/json",
+        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+        $data = json_encode([
+            "recipient" => $recipient,
+            "sender_id" =>  $smsApi->Sender_number,
+            "type" => "plain",
+            "message" => $massage,
+        ]);
+
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+        // Disable SSL verification for debug purposes (you may remove this in production)
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        // Handle the response from the API
+//        return redirect()->back()->with('success', 'Message successfully sent');
+
+    }
