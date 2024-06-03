@@ -1,0 +1,61 @@
+
+                                    @isset($PO->file)                          
+                                    <div class="col-sm-10">
+                                        <div id="pdf-viewer"></div>
+                                    </div>                           
+                                      <br>
+                                  @endisset
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+    <!-- PDF viewer container -->
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Initialize PDF viewer
+            const url = '{{ asset($PO->file) }}';
+            const container = document.getElementById('pdf-viewer');
+
+            // Check if the url is valid
+            if (!url) {
+                console.error('PDF URL is not valid');
+                return;
+            }
+
+            // Load PDF document
+            pdfjsLib.getDocument(url).promise.then(pdfDoc => {
+                console.log(`PDF loaded: ${pdfDoc.numPages} pages`);
+
+                // Render PDF pages
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                    pdfDoc.getPage(pageNum).then(page => {
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+
+                        container.appendChild(canvas);
+                        page.render(renderContext).promise.then(() => {
+                            console.log(`Page ${pageNum} rendered`);
+                        }).catch(err => {
+                            console.error(`Error rendering page ${pageNum}:`, err);
+                        });
+                    }).catch(err => {
+                        console.error(`Error getting page ${pageNum}:`, err);
+                    });
+                }
+            }).catch(err => {
+                console.error('Error loading PDF:', err);
+            });
+        });
+    </script>
