@@ -41,3 +41,16 @@ controller Code :
             $fileObject           = $request->file('company_logo');
             $directory            = 'Company';
             $uploadedFileUrl      = helpers::uploadFile($fileObject, $directory);
+
+
+
+
+OR , 
+
+ if ($request->hasFile('page_top_image'))
+        {
+            $file       = $request->file('page_top_image');
+            $file_name  = 'page_top_image' .time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('images'), $file_name);
+            $site->page_top_image = $file_name;
+        }
