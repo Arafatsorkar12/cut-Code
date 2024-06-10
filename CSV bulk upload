@@ -1,0 +1,165 @@
+
+
+
+composer require league/csv    use this comman 
+ 
+
+
+
+<--------------file add for in--------------->
+
+<a href="{{ route('products.create',['csv' => 'csv']) }}"
+                                   class="dt-button btn btn-white btn-info btn-bold" title="List" data-toggle="tooltip"
+                                   tabindex="0" aria-controls="dynamic-table">
+                                    <span>
+                                        <i class="fa fa-upload bigger-110"></i>
+                                    </span>
+                                </a>
+
+
+<--------------file stire for in--------------->
+                <form action="{{ route('products.store',['csv' => 'csv']) }}" method="post" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row" style="width: 100%; margin: 0 0 20px !important;">
+                        <div class="col-sm-12 px-4">
+
+
+
+                            <div class="form-group row">
+                                <label class="col-sm-2 control-label" for="name"><b>  </b></label>
+
+                                <div class="col-sm-9">
+
+
+                                    <label class="ace-file-input ace-file-multiple">
+                                        <input multiple="" type="file" id=" " name="csv_file">
+                                        <span class="ace-file-container" data-title="Drop files here or click to choose">
+                                                                <span class="ace-file-name" data-title="No File ...">
+                                                                    <i class=" ace-icon ace-icon fa fa-cloud-upload"></i>
+                                                                </span>
+                                                            </span>
+                                        <a class="remove" href="#">
+                                            <i class=" ace-icon fa fa-times"></i>
+                                        </a>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <button class="btn btn-primary btn-sm pull-right m-4"  style="margin: 20px"><i class="fa fa-save"></i> Save</button>
+
+                                    <a href="{{asset('Sample-Product.csv')}}" class="btn btn-primary btn-sm pull-right m-4" style="margin: 20px"><i class="fa fa-save"></i> Sample File</a>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+
+
+use League\Csv\Reader;
+use League\Csv\Exception;
+use App\Models\Product;
+
+<--------------file create request for in--------------->
+ public function create(Request $request)
+    {
+        $this->hasAccess("account-products.create");
+
+        $categories = Category::orderBy('name')->pluck('name', 'id');
+        $units      = Unit::orderBy('name')->pluck('name', 'id');
+
+        if ($request->csv)
+        {
+            return view('product.products.bulkUpload');
+        }
+        else
+        {
+            return view('product.products.create', compact('categories', 'units'));
+        }
+    }
+
+
+<--------------file Store for in--------------->
+    // : RedirectResponse
+    public function store(Request $request)
+    {
+        $this->hasAccess("account-products.create");
+
+        if ($request->csv)
+        {
+            $request->validate([
+                'csv_file' => 'required|file|mimes:csv,txt',
+            ]);
+
+             $path = $request->file('csv_file')->store('csv_files');
+             $this->processCsv(storage_path('app/' . $path));
+            return redirect()->route('products.index')->with('message', 'CSV file uploaded and processed successfully.');
+        }
+        
+    
+        return redirect()->route('products.index')->with('message', 'Product Create Successful');
+    }
+
+
+    private function processCsv($filePath)
+    {
+        try {
+             $csv = Reader::createFromPath($filePath, 'r');
+            $csv->setHeaderOffset(0);
+
+             $headers = $csv->getHeader();
+            if (count($headers) !== count(array_unique($headers))) {
+                throw new Exception('The header record contains duplicate column names.');
+            }
+
+             foreach ($csv as $record) {
+
+                 if ($this->isRowEmpty($record)) {
+                     continue;
+                 }
+                Product::create([
+                    'name'              => $record['name'] ?? 'Unnamed Product',
+                    'category_id'       => $this->parseInt($record['category_id']),
+                    'unit_id'           => $this->parseInt($record['unit_id']),
+                    'purchase_price'    => $this->parseFloat($record['purchase_price'], 0),
+                    'product_type'      => 'account_prod',
+                    'selling_price'     => $this->parseFloat($record['selling_price'], 0),
+                    'opening_quantity'  => $this->parseFloat($record['opening_quantity'], 0),
+                    'current_stock'     => 0.00,
+                    'description'       => $record['description'] ?? '',
+                    'created_by'        => 1,
+                    'updated_by'        => 1,
+                    'company_id'        => 1,
+                ]);
+            }
+
+            return 'CSV file uploaded and processed successfully.';
+        } catch (Exception $e) {
+             return 'Error: ' . $e->getMessage();
+        } catch (\Exception $e) {
+             return 'An error occurred while processing the CSV file.';
+        }
+    }
+
+    private function isRowEmpty($record)
+    {
+         foreach ($record as $value) {
+            if (!empty(trim($value))) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private function parseInt($value, $default = 0)
+    {
+        return is_numeric($value) ? (int)$value : $default;
+    }
+
+    private function parseFloat($value, $default = 0.0)
+    {
+        return is_numeric($value) ? (float)$value : $default;
+    }
