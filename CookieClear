@@ -1,0 +1,17 @@
+  <a class="app-nav__item" href="{{ route('clear.cookie') }}" title="Refresh Cookie">
+                <i class="fa fa-trash"></i>
+  </a>
+
+
+route ->
+    Route::get('clear-cookie',                     'SoftwareSettingController@cookieClear')->name('clear.cookie');
+
+controller-->
+  public function cookieClear()
+    {
+        if (Cookie::has('purchases'))
+        {
+            Cookie::queue(Cookie::forget('purchases'));
+        }
+        return redirect()->back()->withSuccess('Application Cookie Cleared');
+    }
