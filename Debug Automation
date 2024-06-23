@@ -34,3 +34,35 @@ Web Debug On OFF system
 
 
 this system Totali Automation Debuging On OFF
+
+
+
+and other way --> 
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+
+Route::get('/update-debug', function () {
+    $envPath = base_path('.env');
+
+    if (File::exists($envPath)) {
+        $envContent = File::get($envPath);
+
+        if (config('app.debug') === false) {
+            $envContent = preg_replace('/APP_DEBUG=false/', 'APP_DEBUG=true', $envContent);
+        } else {
+            $envContent = preg_replace('/APP_DEBUG=true/', 'APP_DEBUG=false', $envContent);
+        }
+
+        File::put($envPath, $envContent);
+
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        Artisan::call('route:clear');
+
+        return redirect()->back()->with('message', 'Debug mode updated successfully');
+    }
+
+    return redirect()->back()->with('error', 'Failed to update debug mode');
+});
+
