@@ -1,0 +1,64 @@
+<form action="{{isset($course)? route('course.update',$course->id): route('course.store')}}" method="post" enctype="multipart/form-data">
+                        @csrf
+
+<div class="form-group">
+                                <label for="">Name</label>
+                                <select name="studentCourse_id" class="form-control" id="name">
+                                    <option value="">Select Name</option>
+                                    @foreach($studentCourse as $name)
+                                        <option value="{{$name->id}}" @isset($course){{$course->category_id == $name->id? 'selected':''}}@endisset >{{$name->name}}</option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                                @enderror
+                            </div>
+
+
+<div class="form-group">
+                                <label for="">Duration</label>
+                                <input type="number" name="duration" value="{{ $course->duration ?? old('duration') }}" placeholder="eg.3 hours" class="form-control" >
+                                @error('duration')
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                                @enderror
+                            </div>
+
+
+
+ <div class="form-group">
+                                <label for="">Overview</label>
+                                <textarea id="summernote" class="form-control" name="overview" id="" cols="30" rows="10">@isset($course) {{$course->overview}} @endisset</textarea>
+                                @error('overview')
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                                @enderror
+                            </div>
+
+  <div class="form-group">
+                                <label for="">Image</label>
+                                <input type="file" name="image" class="form-control" onchange='openFile(event)'>
+                                <img id='output' style="width:200px;margin-top: 5px">
+                                @isset($course)
+                                    <h5 class="m-2">Old Image</h5>
+                                    <img width="200" class="img-thumbnail" src="{{asset(isset($course->image)?$course->image:'default.png')}}" alt="Slider Image">
+                                @endisset
+                                @error('image')
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                                @enderror
+                            </div>
+
+
+  <div class="form-group">
+                                <label for="">Status</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="status" name="status" @isset($course) {{$course->status == 1? 'checked' : '' }} @endisset>
+                                    <label class="custom-control-label" for="status">Active</label>
+                                </div>
+                            </div>
