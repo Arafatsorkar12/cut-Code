@@ -1,0 +1,25 @@
+@foreach ($sales as $key => $item)
+
+
+                                                    <tr onclick="submitForm('{{ $item->id }}')" id="saleRow{{ $key }}">
+                                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                                        <td class="text-center">{{ $item->invoice_no }}</td>
+
+                                                        <td class="text-center">{{ number_format($item->payable_amount) }}</td>
+                                                        <td class="text-center">{{ number_format($item->due_amount, 1, '.', '') }}</td>
+                                                    </tr>
+                                                @endforeach
+this from use any place in this project 
+
+ <form id="salesForm" action="{{ route('dokani.sales-v2.sales-v2.create', ['type' => 'DueRequest']) }}" method="get">
+            <input type="hidden" id="rowIdInput" name="id" value="">
+        </form>
+
+
+
+function submitForm(itemId) {
+            var form = document.getElementById("salesForm");
+            var rowIdInput = document.getElementById("rowIdInput");
+            rowIdInput.value = itemId;
+            form.submit();
+        }
