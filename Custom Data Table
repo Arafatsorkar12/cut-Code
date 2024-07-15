@@ -97,7 +97,7 @@
     });
 
 
-table search ---->
+table search One col---->
    function myFunction() {
             var input, filter, table, tr, td, i, txtValue;
             input = document.getElementById("myInput");
@@ -113,6 +113,35 @@ table search ---->
                     } else {
                         tr[i].style.display = "none";
                     }
+                }
+            }
+        }
+
+
+Table search dynamik col select --->
+   function myFunction() {
+            var input, filter, table, tr, td, i, j, txtValue;
+            input = document.getElementById("myInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("datatable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) { // Start from 1 to skip header row
+                var match = false;
+                for (j = 1; j <= 2; j++) { // Loop through "Patient" and "Consulted By" columns (indices 1 and 2)
+                    td = tr[i].getElementsByTagName("td")[j];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                if (match) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
                 }
             }
         }
