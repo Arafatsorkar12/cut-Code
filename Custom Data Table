@@ -1,0 +1,97 @@
+
+
+
+
+
+
+    <table id="datatable" class="table table-striped table-bordered nowrap" width="100%">
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.flash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
+
+
+    $(document).ready(function() {
+        $('#datatable').DataTable({
+            dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+            buttons: [{
+                extend: 'csv',
+                className: 'btn btn-success btn-sm mb-1',
+                title: 'All Appointment',
+                exportOptions: {
+                    columns: ':not(:last-child)'
+                }
+            },
+                {
+                    extend: 'excel',
+                    className: 'btn btn-info btn-sm mb-1',
+                    title: 'Product List',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-danger btn-sm mb-1',
+                    title: 'Product List',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    },
+                    customize: function(doc) {
+                        doc.content.splice(0, 1, {
+                            text: 'Product List',
+                            fontSize: 14,
+                            bold: true,
+                            margin: [0, 0, 0, 12]
+                        });
+
+                        // Adjust table width
+                        doc.styles.tableBodyEven.alignment = 'center';
+                        doc.styles.tableBodyOdd.alignment = 'center';
+                        doc.styles.tableHeader.alignment = 'center';
+
+                        var objLayout = {};
+                        objLayout['hLineWidth'] = function(i) {
+                            return 0.5;
+                        };
+                        objLayout['vLineWidth'] = function(i) {
+                            return 0.5;
+                        };
+                        objLayout['hLineColor'] = function(i) {
+                            return '#aaa';
+                        };
+                        objLayout['vLineColor'] = function(i) {
+                            return '#aaa';
+                        };
+                        objLayout['paddingLeft'] = function(i) {
+                            return 5;
+                        };
+                        objLayout['paddingRight'] = function(i) {
+                            return 4;
+                        };
+                        objLayout['paddingTop'] = function(i) {
+                            return 4;
+                        };
+                        objLayout['paddingBottom'] = function(i) {
+                            return 4;
+                        };
+                        objLayout['fillColor'] = function(i) {
+                            return (i % 2 === 0) ? '#F3F3F3' : null;
+                        };
+                        doc.content[1].layout = objLayout;
+                    }
+                },
+            ],
+            paging: false,
+            searching: false
+        });
+
+        $(".dt-buttons").addClass("pull-right");
+    });
