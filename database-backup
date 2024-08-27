@@ -1,0 +1,37 @@
+Route::get('db-backup', [DatabaseBackupController::class, 'db_backup'])->name('db-backup');
+
+ public function db_backup(Request $request)
+    {
+        $ds         = DIRECTORY_SEPARATOR;
+
+        $path       = public_path() . $ds . 'app' . $ds . 'backups' . $ds;
+        $file       = 'dump.sql';
+        $directory  = $path . $file;
+        $filename   = 'Hotel_backup_' . fdate(now(), 'Y_m_d_h_i_s') . '.sql';
+
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        if ($request->export_type == 'full') {
+            MySql::create()
+                ->setDbName(env('DB_DATABASE'))
+                ->setUserName(env('DB_USERNAME'))
+                ->setPassword(env('DB_PASSWORD'))
+                ->setHost(env('DB_HOST'))
+                ->setPort(env('DB_PORT'))
+                ->dumpToFile($directory);
+        } else {
+            MySql::create()
+                ->setDbName(env('DB_DATABASE'))
+                ->setUserName(env('DB_USERNAME'))
+                ->setPassword(env('DB_PASSWORD'))
+                ->setHost(env('DB_HOST'))
+                ->setPort(env('DB_PORT'))
+                ->doNotCreateTables()
+                ->dumpToFile($directory);
+        }
+
+        return response()->download($directory, $filename);
+    }
