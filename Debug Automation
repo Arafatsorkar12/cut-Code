@@ -66,3 +66,35 @@ Route::get('/update-debug', function () {
     return redirect()->back()->with('error', 'Failed to update debug mode');
 });
 
+
+
+others way ==================>
+
+    Route::get('system_debug',             [PrescriptionController::class, 'toggleDebug']);
+   use Illuminate\Support\Facades\Artisan;
+   use Illuminate\Support\Facades\File;
+
+    public function toggleDebug()
+    {
+        Artisan::call('config:clear');
+        $envPath = base_path('.env');
+        if (File::exists($envPath)) {
+            $envContent = File::get($envPath);
+            $pattern = '/^APP_DEBUG=(true|false)$/m';
+            if (preg_match($pattern, $envContent, $matches)) {
+                $newValue = ($matches[1] === "false") ? "true" : "false";
+                $envContent = preg_replace($pattern, 'APP_DEBUG=' . $newValue, $envContent);
+                File::put($envPath, $envContent);
+                Artisan::call('config:clear');
+                Artisan::call('cache:clear');
+                Artisan::call('view:clear');
+                Artisan::call('route:clear');
+                return redirect()->back()->with('message', 'Debug mode updated successfully');
+            } else {
+                return redirect()->back()->with('error', 'APP_DEBUG not found');
+            }
+        } else {
+            return redirect()->back()->with('error', 'The .env file does not exist');
+        }
+    }
+
