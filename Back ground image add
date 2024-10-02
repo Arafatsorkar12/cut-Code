@@ -17,7 +17,7 @@
             .no-print {
                 display: none;
             }
-            .bg-img img{
+            .bg-img img{    
                 width: 70%!important;
                 height: 90%!important;
             }
