@@ -1,0 +1,58 @@
+
+  @if (count($OtCouns) > 0)
+                                    <div class="pull-left" style="margin-top:10px; margin-left:10px">
+                                        <a href="{{ url()->current() }}?export_type=export_excel&{{ request()->getQueryString() }}"
+                                            target="_blank" style="margin-right: 5px">
+                                            <img src="{{ asset('assets/images/export-icons/excel-icon.png') }}">
+                                        </a>
+                                        <a href="{{ url()->current() }}?export_type=export_pdf&{{ request()->getQueryString() }}"
+                                            target="_blank" style="margin-right: 5px">
+                                            <img src="{{ asset('assets/images/export-icons/pdf-icon.png') }}">
+                                        </a>
+                                    </div>
+                                @endif
+
+<============================= controller =============================>
+use PDF, Excel;
+use Module\Hospital\Services\Export\ReportExportService;
+
+
+ public function index(Request $request )
+    {
+if (request()->filled('export_type')) {
+            $data['OtCouns'] = $data['OtCouns'] ->get();
+            $filename = 'OT_Counselling_' . fdate(request('from_date'), 'Y_m_d');
+
+            return $this->exportData($data, 'operation-theatre/Counselling/export/', $filename);
+        }
+
+  return view('operation-theatre.Counselling.index', $data);
+    }
+
+
+public function exportData($data, $file_path, $filename)
+    {
+        set_time_limit(0);
+        if (request('export_type') == 'export_pdf') {
+            ini_set("pcre.backtrack_limit", "50000000");
+            $pdf = PDF::loadview($file_path . request('export_type'), $data, [], [
+                // 'format' => 'Legal-L',
+                'margin_header' => 10,
+                'margin_footer' => 5,
+                'mode'          => 'utf-8',
+                'format'        => 'A4-L',
+                'orientation'   => 'L'
+            ]);
+
+            $pdf->getMpdf()->setFooter("{PAGENO} / {nb}");
+
+            return $pdf->stream($filename . '.pdf');
+        }
+
+
+        if (request('export_type') == 'export_excel') {
+
+            $data['file_path'] = $file_path;
+
+            return Excel::download(new ReportExportService($data), $filename . '.xlsx');
+        }
